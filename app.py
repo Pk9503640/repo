@@ -1,5 +1,6 @@
 from fastapi import FastAPI, UploadFile, Form
 from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 from typing import Optional
 import os
 import json
@@ -7,6 +8,15 @@ import httpx
 import asyncio
 
 app = FastAPI()
+
+# --- CORS middleware (fix for frontend -> backend connection) ---
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # For testing, allow all. (Later: restrict to Tiiny host URL)
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Environment variables (Railway ke dashboard me set karo)
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -47,7 +57,6 @@ async def call_gemini(prompt: str):
 # --- Auto Mode Decision ---
 def choose_model(prompt: str) -> str:
     prompt_lower = prompt.lower()
-    # simple heuristic (can be improved later with regex / classifier)
     if any(word in prompt_lower for word in ["solve", "equation", "math", "physics", "theorem", "integral", "derivative"]):
         return "gemini"
     return "groq"
